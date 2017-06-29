@@ -201,12 +201,20 @@ public abstract class Wrapper
 	 */
 	abstract public Object invokeMethod(Object instance, String mn, Class<?>[] types, Object[] args) throws NoSuchMethodException, InvocationTargetException;
 
-	private static Wrapper makeWrapper(Class<?> c)
-	{
+	/**
+	 * 接口的名称
+	 * @param c
+	 * @return
+	 */
+	private static Wrapper makeWrapper(Class<?> c) {
+
+		//当前的CLass是否是基础类型
 		if( c.isPrimitive() )
 			throw new IllegalArgumentException("Can not create wrapper for primitive type: " + c);
 
+		//获取接口的名称
 		String name = c.getName();
+		//获取类加载器： 先获取当前线程的类加载器，没有的话就获取c的类加载器。
 		ClassLoader cl = ClassHelper.getClassLoader(c);
 
 		StringBuilder c1 = new StringBuilder("public void setPropertyValue(Object o, String n, Object v){ ");
@@ -426,4 +434,5 @@ public abstract class Wrapper
 	    }
 	    return false;
 	}
+
 }

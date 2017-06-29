@@ -16,6 +16,7 @@ public class ProtocolUtils {
                           url.getParameter(Constants.GROUP_KEY));
     }
 
+    // key = 组名 + 服务名 + 服务版本 + 端口
     public static String serviceKey(int port, String serviceName, String serviceVersion, String serviceGroup) {
         StringBuilder buf = new StringBuilder();
         if (serviceGroup != null && serviceGroup.length() > 0) {

@@ -74,25 +74,22 @@ public abstract class Proxy
 	 * 
 	 * @return Proxy instance.
 	 */
-	public static Proxy getProxy(ClassLoader cl, Class<?>... ics)
-	{
-		if( ics.length > 65535 )
+	public static Proxy getProxy(ClassLoader cl, Class<?>... ics){
+		if( ics.length > 65535 ){
 			throw new IllegalArgumentException("interface limit exceeded");
-		
+		}
+
 		StringBuilder sb = new StringBuilder();
-		for(int i=0;i<ics.length;i++)
-		{
+		for(int i=0;i<ics.length;i++) {
 			String itf = ics[i].getName();
-			if( !ics[i].isInterface() )
+			if( !ics[i].isInterface() ){
 				throw new RuntimeException(itf + " is not a interface.");
+			}
 
 			Class<?> tmp = null;
-			try
-			{
+			try {
 				tmp = Class.forName(itf, false, cl);
-			}
-			catch(ClassNotFoundException e)
-			{}
+			} catch (ClassNotFoundException e) {}
 
 			if( tmp != ics[i] )
 				throw new IllegalArgumentException(ics[i] + " is not visible from class loader");
@@ -105,8 +102,7 @@ public abstract class Proxy
 
 		// get cache by class loader.
 		Map<String, Object> cache;
-		synchronized( ProxyCacheMap )
-		{
+		synchronized( ProxyCacheMap ) {
 			cache = ProxyCacheMap.get(cl);
 			if( cache == null )
 		    {
@@ -116,60 +112,46 @@ public abstract class Proxy
 		}
 
 		Proxy proxy = null;
-		synchronized( cache )
-		{
-			do
-			{
+		synchronized( cache ){
+			do{
 				Object value = cache.get(key);
-				if( value instanceof Reference<?> )
-				{
+				if( value instanceof Reference<?> ){
 					proxy = (Proxy)((Reference<?>)value).get();
 					if( proxy != null )
 						return proxy;
 				}
 
-				if( value == PendingGenerationMarker )
-				{
+				if( value == PendingGenerationMarker ){
 					try{ cache.wait(); }catch(InterruptedException e){}
-				}
-				else
-				{
+				} else {
 					cache.put(key, PendingGenerationMarker);
 					break;
 				}
-			}
-			while( true );
+			} while( true );
 		}
 
 		long id = PROXY_CLASS_COUNTER.getAndIncrement();
 		String pkg = null;
 		ClassGenerator ccp = null, ccm = null;
-		try
-		{
+		try {
 			ccp = ClassGenerator.newInstance(cl);
 
 			Set<String> worked = new HashSet<String>();
 			List<Method> methods = new ArrayList<Method>();
 
-			for(int i=0;i<ics.length;i++)
-			{
-				if( !Modifier.isPublic(ics[i].getModifiers()) )
-				{
+			for(int i=0;i<ics.length;i++) {
+				if( !Modifier.isPublic(ics[i].getModifiers()) ) {
 					String npkg = ics[i].getPackage().getName();
-					if( pkg == null )
-					{
+					if( pkg == null ) {
 						pkg = npkg;
-					}
-					else
-					{
+					} else {
 						if( !pkg.equals(npkg)  )
 							throw new IllegalArgumentException("non-public interfaces from different packages");
 					}
 				}
 				ccp.addInterface(ics[i]);
 
-				for( Method method : ics[i].getMethods() )
-				{
+				for( Method method : ics[i].getMethods() ) {
 					String desc = ReflectUtils.getDesc(method);
 					if( worked.contains(desc) )
 						continue;
@@ -191,8 +173,9 @@ public abstract class Proxy
 				}
 			}
 
-			if( pkg == null )
+			if( pkg == null ){
 				pkg = PACKAGE_NAME;
+			}
 
 			// create ProxyInstance class.
 			String pcn = pkg + ".proxy" + id;
@@ -214,27 +197,22 @@ public abstract class Proxy
 			Class<?> pc = ccm.toClass();
 			proxy = (Proxy)pc.newInstance();
 		}
-		catch(RuntimeException e)
-		{
+		catch(RuntimeException e) {
 			throw e;
-		}
-		catch(Exception e)
-		{
+		} catch(Exception e) {
 			throw new RuntimeException(e.getMessage(), e);
-		}
-		finally
-		{
+		} finally {
 			// release ClassGenerator
 			if( ccp != null )
 				ccp.release();
 			if( ccm != null )
 				ccm.release();
-			synchronized( cache )
-			{
-				if( proxy == null )
+			synchronized( cache ) {
+				if( proxy == null ){
 					cache.remove(key);
-				else
+				} else{
 					cache.put(key, new WeakReference<Proxy>(proxy));
+				}
 				cache.notifyAll();
 			}
 		}

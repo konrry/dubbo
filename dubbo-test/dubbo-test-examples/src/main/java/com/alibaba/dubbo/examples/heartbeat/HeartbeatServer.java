@@ -55,10 +55,7 @@ public class HeartbeatServer {
 
             public void run() {
                 try {
-                    exchangeServer = new HeaderExchangeServer(
-                            Transporters.bind(
-                                    clientUrl.addParameter( Constants.HEARTBEAT_KEY, 1000 ),
-                                    serverHandler ) );
+                    exchangeServer = new HeaderExchangeServer(Transporters.bind(clientUrl.addParameter( Constants.HEARTBEAT_KEY, 1000 ),serverHandler ) );
                     serverStarted = true;
                 } catch ( Exception e ) {
                     e.printStackTrace();
@@ -74,8 +71,7 @@ public class HeartbeatServer {
         }
 
         HeartBeatExchangeHandler clientHandler = new HeartBeatExchangeHandler( handler );
-        ExchangeClient exchangeClient = new HeaderExchangeClient(
-                Transporters.connect( clientUrl, clientHandler ) );
+        ExchangeClient exchangeClient = new HeaderExchangeClient(Transporters.connect( clientUrl, clientHandler ) );
 
         for ( int i = 0; i < 10; i++ ) {
             Thread.sleep( 1000 );

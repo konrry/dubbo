@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.alibaba.dubbo.rpc.Invoker;
 import junit.framework.Assert;
 
 import org.junit.Test;
@@ -53,7 +54,9 @@ public class DubboProtocolTest
 	public void testDemoProtocol() throws Exception
 	{
 		DemoService service = new DemoServiceImpl();
-		protocol.export(proxy.getInvoker(service, DemoService.class, URL.valueOf("dubbo://127.0.0.1:9020/" + DemoService.class.getName() + "?codec=exchange")));
+		//生成一个代理类，通过方法名称，参数个数，参数类型 来匹配目标类的方法调用
+        Invoker<DemoService> invoker = proxy.getInvoker(service, DemoService.class, URL.valueOf("dubbo://127.0.0.1:9020/" + DemoService.class.getName() + "?codec=exchange"));
+		protocol.export(invoker);
 		service = proxy.getProxy(protocol.refer(DemoService.class, URL.valueOf("dubbo://127.0.0.1:9020/" + DemoService.class.getName() + "?codec=exchange")));
 		assertEquals(service.getSize(new String[]{"", "", ""}), 3);
 	}
